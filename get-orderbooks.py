@@ -3,8 +3,10 @@
 # pip install requests
 
 # make a bot.py and put this code in
+# https://github.com/ccxt/ccxt/tree/master/python standardized exchange data parsing
 import os
 import requests
+import ccxt
 
 
 def get_order_book(url):
@@ -63,6 +65,8 @@ def main():
 		parsed_data = parsing_function(exchange_name, raw_data)
 		print(parsed_data)
 		#print(data)
+
+	print(ccxt.exchanges)
 
 
 if __name__ == "__main__":
