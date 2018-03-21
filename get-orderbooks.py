@@ -20,7 +20,7 @@ def get_order_book(url):
 def parse_binance_data(exchange_name, raw_data):
 	print(raw_data)
 	print(raw_data.keys())
-	# dict_keys(['lastUpdateId', 'bids', 'asks'])
+	# dict_keys(['lastUpdateId', 'bids', 'asks' 'price', 'qty'])
 	bids = raw_data['bids']
 	print(bids)
 	ask_price = raw_data['']
@@ -30,7 +30,7 @@ def parse_binance_data(exchange_name, raw_data):
 	ticker_symbol_xlm = raw_data['']
 	ticker_symbol_btc = raw_data['']
 	timestamp = raw_data['']
-	return [exchange_name, ask_price, bid_price, order_size, volume, ticker_symbol_xlm, ticker_symbol_btc, timestamp]
+	return [exchange_name, ask_price, bid_price, order_size, ticker_symbol_xlm, ticker_symbol_btc, timestamp]
 
 def parse_bittrex_data(exchange_name, raw_data):
 	bid_data = raw_data['result']['buy']
@@ -43,6 +43,7 @@ def parse_bittrex_data(exchange_name, raw_data):
 		row_data = [exchange_name, None, bid['Rate'], bid['Quantity'], None, None, None, None]
 		result_data.append(row_data)
 	return result_data
+	# All price data is in BTC
 
 
 def main():
