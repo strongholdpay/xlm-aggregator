@@ -5,6 +5,8 @@
 # https://github.com/ccxt/ccxt/tree/master/python standardized exchange data parsing
 import os
 import ccxt
+from database import db_session
+from models import Exchange, Order, OrderTypeEnum
 
 
 def print_results(exchange_name, results):
@@ -18,6 +20,30 @@ def print_results(exchange_name, results):
 	for result in results['asks']:
 		print([result[0], result[1], 'ask', exchange_name])
 
+
+def create_order(order_type, result, exchange_id):
+	order = Order(order_type=order_type, quantity=result[1], price=result[0], exchange_id=exchange_id)
+	db_session.add(order)
+
+
+def create_orders(exchange, results):
+
+	for result in results['bids']:
+		create_order(OrderTypeEnum.buy, result, exchange.id)
+
+	for result in results['asks']:
+		create_order(OrderTypeEnum.sell, result, exchange.id)
+
+	db_session.commit()
+
+
+def ensure_exchange_exists(exchange_name):
+	exchange = Exchange.query.filter(Exchange.name == exchange_name).first()
+	if not exchange:
+		exchange = Exchange(name=exchange_name)
+		db_session.add(exchange)
+		db_session.commit()
+	return exchange
 
 
 def main():
@@ -37,8 +63,11 @@ def main():
 		except AttributeError:
 			print('Exchange {} not found on ccxt'.format(exchange_name))
 			continue
-		exchange = constructor()
-		results = exchange.fetch_order_book('XLM/BTC')
+		exchange_api = constructor()
+		results = exchange_api.fetch_order_book('XLM/BTC')
+		exchange = ensure_exchange_exists(exchange_name)
+		print(exchange)
+		create_orders(exchange, results)
 		print_results(exchange_name, results)
 		#break
 
