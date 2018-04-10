@@ -1,6 +1,6 @@
 import datetime
 import enum
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Numeric, String, UniqueConstraint
 from database import Base
 
 
@@ -23,6 +23,10 @@ class OrderTypeEnum(enum.Enum):
 
 class Order(Base):
     __tablename__ = 'orders'
+    __table_args__ = (
+        UniqueConstraint('order_type', 'quantity', 'price', 'exchange_id'),
+    )
+
     id = Column(Integer, primary_key=True)
     order_type = Column(Enum(OrderTypeEnum))
     quantity = Column(Numeric(16,8))

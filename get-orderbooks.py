@@ -12,70 +12,85 @@ from models import Exchange, Order, OrderTypeEnum
 def print_results(exchange_name, results):
 
 
-	print('-----bids-----')
-	for result in results['bids']:
-		print([result[0], result[1], 'bid', exchange_name])
+    print('-----bids-----')
+    for result in results['bids']:
+        print([result[0], result[1], 'bid', exchange_name])
 
-	print('-----asks-----')
-	for result in results['asks']:
-		print([result[0], result[1], 'ask', exchange_name])
+    print('-----asks-----')
+    for result in results['asks']:
+        print([result[0], result[1], 'ask', exchange_name])
 
 
 def create_order(order_type, result, exchange_id):
-	order = Order(order_type=order_type, quantity=result[1], price=result[0], exchange_id=exchange_id)
-	db_session.add(order)
+    order = Order(order_type=order_type, quantity=result[1], price=result[0], exchange_id=exchange_id)
+    db_session.add(order)
+
+
+def create_order(order_type, result, exchange_id):
+    db_session.add(order)
 
 
 def create_orders(exchange, results):
 
-	for result in results['bids']:
-		create_order(OrderTypeEnum.buy, result, exchange.id)
+    exchange_id = exchange.id
 
-	for result in results['asks']:
-		create_order(OrderTypeEnum.sell, result, exchange.id)
+    order_data = []
+    for result in results['bids']:
+        order = [OrderTypeEnum.buy, result[1], result[0], exchange_id]
+        order_data.append(order)
+        #create_order(OrderTypeEnum.buy, result, exchange.id)
 
-	db_session.commit()
+    for result in results['asks']:
+        order = [OrderTypeEnum.sell, result[1], result[0], exchange_id]
+        order_data.append(order)
+        #create_order(OrderTypeEnum.sell, result, exchange.id)
+
+    Order.__table__.insert().prefix_with('IGNORE').values(order_data)
+    #db_session.commit()
 
 
 def ensure_exchange_exists(exchange_name):
-	exchange = Exchange.query.filter(Exchange.name == exchange_name).first()
-	if not exchange:
-		exchange = Exchange(name=exchange_name)
-		db_session.add(exchange)
-		db_session.commit()
-	return exchange
+    exchange = Exchange.query.filter(Exchange.name == exchange_name).first()
+    if not exchange:
+        exchange = Exchange(name=exchange_name)
+        db_session.add(exchange)
+        db_session.commit()
+    return exchange
 
 
 def main():
-	exchanges = [
-		'binance',
-		'bittrex',
-		'bitcoincoid',
-		'cex',
-		'hitbtc',
-		'kraken',
-		'poloniex',
+    exchanges = [
+        'binance',
+        'bittrex',
+        #'bitcoincoid',
+        'cex',
+        'hitbtc',
+        'kraken',
+        'poloniex',
 
-	]
-	for exchange_name in exchanges:
-		try:
-			constructor = getattr(ccxt, exchange_name)
-		except AttributeError:
-			print('Exchange {} not found on ccxt'.format(exchange_name))
-			continue
-		exchange_api = constructor()
-		results = exchange_api.fetch_order_book('XLM/BTC')
-		exchange = ensure_exchange_exists(exchange_name)
-		print(exchange)
-		create_orders(exchange, results)
-		print_results(exchange_name, results)
-		#break
+    ]
+    for exchange_name in exchanges:
+        try:
+            constructor = getattr(ccxt, exchange_name)
+        except AttributeError:
+            print('Exchange {} not found on ccxt'.format(exchange_name))
+            continue
+        exchange_api = constructor()
+        results = exchange_api.fetch_order_book('XLM/BTC')
+        #print(results)
+        exchange = ensure_exchange_exists(exchange_name)
+        #print(exchange)
+        create_orders(exchange, results)
+        #print_results(exchange_name, results)
+        #break
 
-	#print(exchange.fetchMarkets())
+    db_session.commit()
+
+    #print(exchange.fetchMarkets())
 
 
 if __name__ == "__main__":
-	main()
+    main()
 
 
 # Ask Price, Bid Price, Order Size, Ticker Symbol XLM, Ticket Symbol BTC, Exchange Name, Timestamp
